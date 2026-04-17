@@ -259,7 +259,7 @@ function Label({children}){
   return <div style={{fontSize:10,fontFamily:"'DM Sans',sans-serif",letterSpacing:2.5,color:"#9a8f82",textTransform:"uppercase",marginBottom:8}}>{children}</div>;
 }
 
-function Btn({onClick,disabled,loading,loadingText,children,style:{}}){
+function Btn({onClick,disabled,loading,loadingText,children,style}){
   const on=!disabled&&!loading;
   return(
     <button onClick={onClick} disabled={disabled||loading} style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:on?"#2d5a27":"#e8e2d9",color:on?"#fff":"#9a8f82",fontSize:14,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:on?"pointer":"not-allowed",transition:"all .2s",display:"flex",alignItems:"center",justifyContent:"center",gap:10,boxShadow:on?"0 4px 14px rgba(45,90,39,0.18)":"none"}}>
