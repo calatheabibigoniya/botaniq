@@ -222,7 +222,7 @@ async function askClaude(prompt, b64, mime) {
   const content = b64
     ? [{type:"image",source:{type:"base64",media_type:mime,data:b64}},{type:"text",text:prompt}]
     : [{type:"text",text:prompt}];
-  const r = await fetch("/.netlify/functions/claude",{
+  const r = await fetch("/api/claude",{
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content}]})
   });
