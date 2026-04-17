@@ -102,14 +102,14 @@ const T = {
     analysis_loading: "Анализирую…",
     analyses_left: "анализов осталось",
     result_label: "Результат анализа",
-    paywall_title: "Бесплатные анализы закончились",
-    paywall_sub: "Выберите план для продолжения",
+    paywall_title: "Запросы закончились",
+    paywall_sub: "Этот проект пока тестовый. Вы можете поддержать его развитие — взамен мы отблагодарим вас дополнительными запросами. Будем благодарны за любую обратную связь в директ Instagram:",
     plans: [
-      { name:"Бесплатно", price:"0 ₽",      feats:["5 анализов в месяц","Дневник растений","План ухода","Подбор растений"], btn:"Текущий план", disabled:true },
-      { name:"Pro",       price:"390 ₽/мес", feats:["Безлимитные анализы","Облачное хранение","Напоминания о поливе","PDF-карточки"], btn:"Подключить Pro", highlight:true },
-      { name:"Пакет",     price:"190 ₽",     feats:["50 анализов","Без подписки","Не сгорают"], btn:"Купить пакет" },
+      { name:"Использовано", price:"10/10",    feats:["Дневник растений","План ухода","Подбор растений","Лечение растений"], btn:"Текущий план", disabled:true },
+      { name:"Поддержать",  price:"Boosty",   feats:["Помогите развитию","Получите промокод","На дополнительные","запросы в директ"], btn:"Поддержать →", highlight:true, href:"https://boosty.to/calathea_bibigoniya" },
+      { name:"Промокод",    price:"",         feats:["Уже поддержали?","Введите промокод","который прислала","@calathea_bibigoniya"], btn:"Ввести код" },
     ],
-    payment_note: "Оплата будет доступна при запуске. Пока — тестируйте бесплатно!",
+    payment_note: "Спасибо за поддержку! Напишите в директ @calathea_bibigoniya — и мы отправим вам промокод на дополнительные запросы 🌿",
     close: "Закрыть",
     footer: "Анализ выполняется с помощью ИИ · Данные хранятся на вашем устройстве · © 2025 Botaniq",
     promo_label: "Есть промокод?",
@@ -249,14 +249,14 @@ ${plants.map(p=>`- ${p.name}${p.location?` (${p.location})`:""}`).join("\n")}
     analysis_loading: "Analysing…",
     analyses_left: "analyses left",
     result_label: "Analysis result",
-    paywall_title: "Free analyses used up",
-    paywall_sub: "Choose a plan to continue",
+    paywall_title: "Consultations used up",
+    paywall_sub: "This project is still in beta. You can support its development — and we'll thank you with extra consultations. We'd love your feedback in Instagram DMs:",
     plans: [
-      { name:"Free",  price:"$0",    feats:["5 analyses/month","Plant diary","Care plan","Plant finder"], btn:"Current plan", disabled:true },
-      { name:"Pro",   price:"$5/mo", feats:["Unlimited analyses","Cloud storage","Watering reminders","PDF care cards"], btn:"Get Pro", highlight:true },
-      { name:"Pack",  price:"$2",    feats:["50 analyses","One-time","Never expire"], btn:"Buy pack" },
+      { name:"Used",     price:"10/10",  feats:["Plant diary","Care plan","Plant finder","Plant treatment"], btn:"Current plan", disabled:true },
+      { name:"Support",  price:"Boosty",  feats:["Help us grow","Get a promo code","For extra","consultations"], btn:"Support →", highlight:true, href:"https://boosty.to/calathea_bibigoniya" },
+      { name:"Promo",    price:"",        feats:["Already donated?","Enter the promo","code from","@calathea_bibigoniya"], btn:"Enter code" },
     ],
-    payment_note: "Payments coming at launch. For now — test for free!",
+    payment_note: "Thank you for your support! DM @calathea_bibigoniya on Instagram — we'll send you a promo code for extra consultations 🌿",
     close: "Close",
     footer: "AI-powered analysis · Data stored on your device · © 2025 Botaniq",
     promo_label: "Have a promo code?",
@@ -705,7 +705,8 @@ function Paywall({t,onClose,onPromoApplied}){
       <div style={{background:"#fff",border:"1px solid #ede8e0",borderRadius:24,padding:"30px 22px",maxWidth:500,width:"100%",boxShadow:"0 24px 80px rgba(0,0,0,0.14)"}} onClick={e=>e.stopPropagation()}>
         <div style={{textAlign:"center",fontSize:26,marginBottom:8}}>🌿</div>
         <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:21,fontWeight:700,textAlign:"center",marginBottom:6}}>{t.paywall_title}</h2>
-        <p style={{fontSize:13,color:"#6b6358",textAlign:"center",fontFamily:"'DM Sans',sans-serif",marginBottom:22,lineHeight:1.6}}>{t.paywall_sub}</p>
+        <p style={{fontSize:13,color:"#6b6358",textAlign:"center",fontFamily:"'DM Sans',sans-serif",marginBottom:6,lineHeight:1.6}}>{t.paywall_sub}</p>
+        <a href="https://instagram.com/calathea_bibigoniya" target="_blank" rel="noopener noreferrer" style={{display:"block",textAlign:"center",fontSize:13,color:"#2d5a27",fontWeight:600,fontFamily:"'DM Sans',sans-serif",marginBottom:18,textDecoration:"none"}}>@calathea_bibigoniya</a>
 
         {/* Plans */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
@@ -714,10 +715,21 @@ function Paywall({t,onClose,onPromoApplied}){
               <div style={{fontSize:12,fontWeight:700,color:"#2d5a27",fontFamily:"'DM Sans',sans-serif",marginBottom:3}}>{p.name}</div>
               <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:17,fontWeight:700,marginBottom:10}}>{p.price}</div>
               <div style={{marginBottom:10}}>{p.feats.map((f,j)=><div key={j} style={{fontSize:10,color:"#6b6358",fontFamily:"'DM Sans',sans-serif",marginBottom:3,lineHeight:1.4}}>✓ {f}</div>)}</div>
-              <button disabled={p.disabled} onClick={()=>{if(!p.disabled){setNote(true);setTimeout(()=>setNote(false),4000);}}}
-                style={{width:"100%",padding:"7px 4px",borderRadius:8,border:`1.5px solid ${p.highlight?"#2d5a27":"#ede8e0"}`,background:p.disabled?"transparent":p.highlight?"#2d5a27":"transparent",color:p.disabled?"#b0a898":p.highlight?"#fff":"#1a1a18",fontSize:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:p.disabled?"default":"pointer"}}>
-                {p.btn}
-              </button>
+              {p.href ? (
+                <a href={p.href} target="_blank" rel="noopener noreferrer"
+                  style={{display:"block",width:"100%",padding:"7px 4px",borderRadius:8,border:"1.5px solid #2d5a27",background:"#2d5a27",color:"#fff",fontSize:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",textAlign:"center",textDecoration:"none",boxSizing:"border-box"}}>
+                  {p.btn}
+                </a>
+              ) : p.disabled ? (
+                <button disabled style={{width:"100%",padding:"7px 4px",borderRadius:8,border:"1.5px solid #ede8e0",background:"transparent",color:"#b0a898",fontSize:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"default"}}>
+                  {p.btn}
+                </button>
+              ) : (
+                <button onClick={()=>{setNote(true);setTimeout(()=>setNote(false),4000);document.getElementById("promo-input")?.focus();}}
+                  style={{width:"100%",padding:"7px 4px",borderRadius:8,border:"1.5px solid #ede8e0",background:"transparent",color:"#1a1a18",fontSize:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>
+                  {p.btn}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -733,6 +745,7 @@ function Paywall({t,onClose,onPromoApplied}){
               value={promoCode}
               onChange={e=>{setPromoCode(e.target.value.toUpperCase());setPromoMsg(null);}}
               onKeyDown={e=>e.key==="Enter"&&applyPromo()}
+              id="promo-input"
               placeholder={t.promo_ph}
               style={{flex:1,background:"#faf8f4",border:`1.5px solid ${promoMsg&&!promoOk?"#fca5a5":promoOk?"#c5d9c2":"#ede8e0"}`,borderRadius:10,padding:"10px 12px",color:"#1a1a18",fontSize:14,fontFamily:"'DM Sans',sans-serif",letterSpacing:1,textTransform:"uppercase"}}
             />
