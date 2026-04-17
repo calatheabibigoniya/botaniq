@@ -224,7 +224,7 @@ async function askClaude(prompt, b64, mime) {
     : [{type:"text",text:prompt}];
   const r = await fetch("/api/claude",{
     method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content}]})
+    body: JSON.stringify({model:"claude-sonnet-4-5",max_tokens:1000,messages:[{role:"user",content}]})
   });
   const d = await r.json();
   if(d.error) throw new Error(d.error.message);
