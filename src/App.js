@@ -42,20 +42,26 @@ const T = {
     plan_loading: "Составляю план…",
     plan_result: "План на эту неделю",
     finder_title: "Подбор растения",
-    finder_sub: "Ответьте на 4 вопроса — подберём идеальное растение для ваших условий",
+    finder_sub: "Ответьте на вопросы — подберём идеальное растение для ваших условий",
     finder_light: "Освещение",
-    finder_light_opts: ["Много света — южное окно", "Среднее — восток или запад", "Мало света — север или вглубь"],
+    finder_light_opts: ["Много света — южное окно", "Среднее — восток или запад", "Мало света — север"],
+    finder_light_photo_hint: "Или сфотографируйте место для растения",
+    finder_light_photo_tip: "Совет по съёмке: снимайте в пасмурный день без вспышки, держа телефон спиной к окну — так ИИ точнее оценит освещённость",
     finder_humidity: "Влажность воздуха",
     finder_humidity_opts: ["Сухой воздух (батареи зимой)", "Средняя влажность", "Высокая (есть увлажнитель)"],
     finder_pets: "Есть животные или дети?",
     finder_pets_opts: ["Нет", "Есть кошка или собака", "Есть маленькие дети"],
     finder_want: "Что хотите?",
-    finder_want_opts: ["Цветущее растение", "Крупное и эффектное", "Неприхотливое", "Редкое / коллекционное"],
+    finder_want_opts: ["Декоративно-лиственное", "Цветущее растение", "Неприхотливое", "Редкое / коллекционное", "Крупное", "Ампельное", "Суккулент"],
+    finder_comment_label: "Дополнительные пожелания",
+    finder_comment_ph: "Например: хочу необычное, уже есть монстера, бюджет ограничен…",
     finder_btn: "Подобрать растения",
     finder_loading: "Подбираю…",
     finder_result: "Рекомендации",
     analysis_title: "Анализ по фото",
     analysis_warning: "Определение приблизительное — для точной идентификации обратитесь к специалисту",
+    plant_name_label: "Название растения (если знаете)",
+    plant_name_ph: "Например: Антуриум Варока, Монстера Делициоза…",
     upload_hint: "Нажмите или перетащите фото растения",
     upload_sub: "JPG, PNG или WEBP",
     change_photo: "изменить фото",
@@ -91,20 +97,20 @@ ${plants.map(p=>`- ${p.name}${p.location?` (${p.location})`:""}`).join("\n")}
 Месяц: ${new Date().toLocaleString("ru",{month:"long"})}
 
 Составь план по дням (Пн–Вс). Для каждого растения — конкретные действия с учётом сезона и климата. Полив, подкормка, осмотр, досветка. Будь конкретным и кратким.`,
-    prompt_finder: (l,h,p,w) => `Ты эксперт по комнатным растениям. Подбери 4-5 растений:
+    prompt_finder: (l,h,p,w,c) => `Ты эксперт по комнатным растениям. Подбери 4-5 растений:
 Освещение: ${l}
 Влажность: ${h}
 Животные/дети: ${p}
-Пожелание: ${w}
+Пожелания: ${w}${c?`\nДоп. пожелания: ${c}`:""}
 
 Для каждого: название (рус + лат), почему подходит, сложность ухода 1-5, главный совет.`,
-    prompt_identify: "Определи комнатное растение на фото: название русское и латинское, описание вида. Только идентификация.",
-    prompt_health: (c)=>`Оцени комнатное растение на фото:
+    prompt_identify: (n)=>`Определи комнатное растение на фото: название русское и латинское, описание вида. Только идентификация.${n?` Пользователь считает что это: ${n}.`:""}`,
+    prompt_health: (c,n)=>`Оцени комнатное растение на фото:${n?`\nНазвание растения по мнению пользователя: ${n}.`:""}
 🩺 СОСТОЯНИЕ: видимые проблемы и причины
 💊 ВОССТАНОВЛЕНИЕ: конкретные шаги
 🪴 УХОД: состав грунта с пропорциями, полив, влажность
 💡 ОСВЕЩЕНИЕ (город: ${c||"Россия"}): лучшее место, нужна ли досветка`,
-    prompt_both: (c)=>`Полный анализ растения на фото:
+    prompt_both: (c,n)=>`Полный анализ растения на фото:${n?`\nНазвание растения по мнению пользователя: ${n}.`:""}
 🌿 ИДЕНТИФИКАЦИЯ: название (рус + лат), описание
 🩺 СОСТОЯНИЕ: видимые проблемы
 💊 ВОССТАНОВЛЕНИЕ: конкретные шаги
@@ -149,18 +155,24 @@ ${plants.map(p=>`- ${p.name}${p.location?` (${p.location})`:""}`).join("\n")}
     finder_title: "Find a Plant",
     finder_sub: "Answer 4 questions — we'll find your perfect match",
     finder_light: "Light",
-    finder_light_opts: ["Bright — south window", "Medium — east or west", "Low light — north or far from window"],
+    finder_light_opts: ["Bright — south window", "Medium — east or west", "Low light — north"],
+    finder_light_photo_hint: "Or photograph the spot where you want to place a plant",
+    finder_light_photo_tip: "Photo tip: shoot on an overcast day without flash, holding your phone with your back to the window",
     finder_humidity: "Humidity",
     finder_humidity_opts: ["Dry air (heating)", "Average", "High (humidifier)"],
     finder_pets: "Pets or children?",
     finder_pets_opts: ["None", "Cat or dog", "Small children"],
     finder_want: "What do you want?",
-    finder_want_opts: ["Flowering plant", "Large & impressive", "Low maintenance", "Rare / collector's"],
+    finder_want_opts: ["Foliage plant", "Flowering plant", "Low maintenance", "Rare / collector's", "Large", "Trailing / hanging", "Succulent"],
+    finder_comment_label: "Additional wishes",
+    finder_comment_ph: "E.g. something unusual, I already have a monstera, limited budget…",
     finder_btn: "Find plants",
     finder_loading: "Finding…",
     finder_result: "Recommendations",
     analysis_title: "Photo Analysis",
     analysis_warning: "Approximate identification — consult a specialist for certainty",
+    plant_name_label: "Plant name (if you know it)",
+    plant_name_ph: "E.g. Anthurium Warocqueanum, Monstera Deliciosa…",
     upload_hint: "Click or drag a plant photo here",
     upload_sub: "JPG, PNG or WEBP",
     change_photo: "change photo",
@@ -191,16 +203,16 @@ ${plants.map(p=>`- ${p.name}${p.location?` (${p.location})`:""}`).join("\n")}
 Plants: ${plants.map(p=>`${p.name}${p.location?` (${p.location})`:""}`).join(", ")}
 City: ${city||"temperate climate"}, Month: ${new Date().toLocaleString("en",{month:"long"})}
 Day-by-day plan Mon–Sun. Concrete actions per plant: watering, feeding, inspection, grow lights. Be specific and concise.`,
-    prompt_finder: (l,h,p,w) => `Houseplant expert. Recommend 4-5 plants:
-Light: ${l}, Humidity: ${h}, Pets/children: ${p}, Want: ${w}
+    prompt_finder: (l,h,p,w,c) => `Houseplant expert. Recommend 4-5 plants:
+Light: ${l}, Humidity: ${h}, Pets/children: ${p}, Want: ${w}${c?`, Additional: ${c}`:""}
 For each: name (common+Latin), why it fits, care difficulty 1-5, top tip.`,
-    prompt_identify: "Identify the houseplant in this photo: common and Latin name, species description. Identification only.",
-    prompt_health: (c)=>`Assess the houseplant in this photo:
+    prompt_identify: (n)=>`Identify the houseplant in this photo: common and Latin name, species description. Identification only.${n?` The user thinks it is: ${n}.`:""}`,
+    prompt_health: (c,n)=>`Assess the houseplant in this photo:${n?`\nPlant name according to user: ${n}.`:""}
 🩺 CONDITION: visible problems and causes
 💊 RECOVERY: specific steps
 🪴 CARE: soil mix with proportions, watering, humidity
 💡 LIGHTING (city: ${c||"temperate"}): best spot, grow lights needed?`,
-    prompt_both: (c)=>`Full plant analysis:
+    prompt_both: (c,n)=>`Full plant analysis:${n?`\nPlant name according to user: ${n}.`:""}
 🌿 ID: name (common+Latin), description
 🩺 CONDITION: visible problems
 💊 RECOVERY: steps if needed
@@ -310,8 +322,6 @@ function DiaryTab({t,plants,setPlants}){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
           <div><Label>{t.diary_watered_label}</Label><input {...F("wateredAt","date")}/></div>
           <div><Label>{t.diary_repotted_label}</Label><input {...F("repottedAt","date")}/></div>
-          <div><Label>{t.diary_water_days}</Label><input {...F("waterDays","number")} min={1} max={60}/></div>
-          <div><Label>{t.diary_repot_months}</Label><input {...F("repotMonths","number")} min={1} max={36}/></div>
         </div>
         <div style={{display:"flex",gap:8,marginTop:4}}>
           <Btn onClick={save} disabled={!form.name?.trim()}>{t.diary_save}</Btn>
@@ -395,15 +405,37 @@ function PlanTab({t,plants,city,setCity}){
 
 // ── FINDER ───────────────────────────────────────────────────────────────────
 function FinderTab({t}){
-  const [sel,setSel]=useState({light:0,humidity:0,pets:0,want:0});
+  const [sel,setSel]=useState({light:0,humidity:0,pets:0});
+  const [wants,setWants]=useState([0]);
+  const [comment,setComment]=useState("");
+  const [lightImg,setLightImg]=useState(null);
+  const [lightB64,setLightB64]=useState(null);
+  const [lightMime,setLightMime]=useState("image/jpeg");
   const [result,setResult]=useState(null);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState(null);
+  const lightRef=useRef();
+
+  const toggleWant=(i)=>setWants(w=>w.includes(i)?w.filter(x=>x!==i):[...w,i]);
+
+  const handleLightFile=(file)=>{
+    if(!file||!file.type.startsWith("image/")) return;
+    setLightImg(URL.createObjectURL(file));
+    setLightMime(file.type||"image/jpeg");
+    const r=new FileReader(); r.onload=e=>setLightB64(e.target.result.split(",")[1]); r.readAsDataURL(file);
+  };
+
   const find=async()=>{
     setLoading(true); setError(null); setResult(null);
-    try{ const text=await askClaude(t.prompt_finder(t.finder_light_opts[sel.light],t.finder_humidity_opts[sel.humidity],t.finder_pets_opts[sel.pets],t.finder_want_opts[sel.want])); setResult(text); }
+    try{
+      const wantStr=wants.map(i=>t.finder_want_opts[i]).join(", ");
+      const prompt=t.prompt_finder(t.finder_light_opts[sel.light],t.finder_humidity_opts[sel.humidity],t.finder_pets_opts[sel.pets],wantStr,comment);
+      const text=await askClaude(prompt,lightB64,lightMime);
+      setResult(text);
+    }
     catch(e){ setError(t.err+e.message); } finally{ setLoading(false); }
   };
+
   const Group=({label,opts,field})=>(
     <div style={{marginBottom:16}}>
       <Label>{label}</Label>
@@ -414,14 +446,58 @@ function FinderTab({t}){
       ))}
     </div>
   );
+
   return(
     <div>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:700,marginBottom:6}}>{t.finder_title}</h2>
       <p style={{fontSize:13,color:"#9a8f82",fontFamily:"'DM Sans',sans-serif",marginBottom:20,lineHeight:1.5}}>{t.finder_sub}</p>
-      <Group label={t.finder_light} opts={t.finder_light_opts} field="light"/>
+
+      {/* Light - single select + optional photo */}
+      <div style={{marginBottom:16}}>
+        <Label>{t.finder_light}</Label>
+        {t.finder_light_opts.map((o,i)=>(
+          <button key={i} onClick={()=>setSel(s=>({...s,light:i}))} style={{display:"block",width:"100%",textAlign:"left",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${sel.light===i?"#2d5a27":"#ede8e0"}`,background:sel.light===i?"#f0f4ef":"#faf8f4",color:sel.light===i?"#2d5a27":"#1a1a18",fontSize:13,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",marginBottom:6,transition:"all .15s"}}>
+            {o}
+          </button>
+        ))}
+        {/* Photo of spot */}
+        <div style={{marginTop:8}}>
+          <div style={{fontSize:11,color:"#9a8f82",fontFamily:"'DM Sans',sans-serif",marginBottom:6}}>{t.finder_light_photo_hint}</div>
+          {lightImg?(
+            <div style={{position:"relative",borderRadius:10,overflow:"hidden",marginBottom:6}}>
+              <img src={lightImg} alt="spot" style={{width:"100%",maxHeight:160,objectFit:"cover",display:"block"}}/>
+              <button onClick={()=>{setLightImg(null);setLightB64(null);}} style={{position:"absolute",top:6,right:6,background:"rgba(255,255,255,0.9)",border:"none",borderRadius:6,padding:"3px 8px",fontSize:11,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>✕</button>
+            </div>
+          ):(
+            <button onClick={()=>lightRef.current.click()} style={{width:"100%",padding:"10px",borderRadius:10,border:"1.5px dashed #d8d2c8",background:"#faf8f4",color:"#9a8f82",fontSize:12,fontFamily:"'DM Sans',sans-serif",cursor:"pointer"}}>📷 Загрузить фото места</button>
+          )}
+          <input ref={lightRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>handleLightFile(e.target.files[0])}/>
+          {lightImg&&<div style={{fontSize:10,color:"#b59a4a",fontFamily:"'DM Sans',sans-serif",background:"#fefce8",padding:"6px 10px",borderRadius:6,border:"1px solid #fde68a",lineHeight:1.4}}>💡 {t.finder_light_photo_tip}</div>}
+        </div>
+      </div>
+
       <Group label={t.finder_humidity} opts={t.finder_humidity_opts} field="humidity"/>
       <Group label={t.finder_pets} opts={t.finder_pets_opts} field="pets"/>
-      <Group label={t.finder_want} opts={t.finder_want_opts} field="want"/>
+
+      {/* Want - multi select */}
+      <div style={{marginBottom:16}}>
+        <Label>{t.finder_want}</Label>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+          {t.finder_want_opts.map((o,i)=>(
+            <button key={i} onClick={()=>toggleWant(i)} style={{textAlign:"left",padding:"10px 12px",borderRadius:10,border:`1.5px solid ${wants.includes(i)?"#2d5a27":"#ede8e0"}`,background:wants.includes(i)?"#f0f4ef":"#faf8f4",color:wants.includes(i)?"#2d5a27":"#1a1a18",fontSize:12,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",transition:"all .15s"}}>
+              {wants.includes(i)?"✓ ":""}{o}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Comment */}
+      <div style={{marginBottom:16}}>
+        <Label>{t.finder_comment_label}</Label>
+        <textarea value={comment} onChange={e=>setComment(e.target.value)} placeholder={t.finder_comment_ph}
+          style={{width:"100%",background:"#faf8f4",border:"1.5px solid #ede8e0",borderRadius:10,padding:"11px 13px",color:"#1a1a18",fontSize:13,fontFamily:"'DM Sans',sans-serif",minHeight:70,resize:"vertical"}}/>
+      </div>
+
       <Btn onClick={find} loading={loading} loadingText={t.finder_loading}>{t.finder_btn}</Btn>
       {error&&<div style={{marginTop:12,background:"#fef2f2",border:"1px solid #fecaca",borderRadius:10,padding:"12px",color:"#b91c1c",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>{error}</div>}
       {result&&<ResultBox title={t.finder_result} text={result}/>}
@@ -435,6 +511,7 @@ function AnalysisTab({t,city,setCity,used,setUsed,onLimit}){
   const [b64,setB64]=useState(null);
   const [mime,setMime]=useState("image/jpeg");
   const [mode,setMode]=useState("both");
+  const [plantName,setPlantName]=useState("");
   const [result,setResult]=useState(null);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState(null);
@@ -447,7 +524,7 @@ function AnalysisTab({t,city,setCity,used,setUsed,onLimit}){
     const r=new FileReader(); r.onload=e=>setB64(e.target.result.split(",")[1]); r.readAsDataURL(f);
   },[]);
   const onDrop=useCallback(e=>{e.preventDefault();setDrag(false);handleFile(e.dataTransfer.files[0]);},[handleFile]);
-  const buildPrompt=()=>mode==="identify"?t.prompt_identify:mode==="health"?t.prompt_health(city):t.prompt_both(city);
+  const buildPrompt=()=>mode==="identify"?t.prompt_identify(plantName):mode==="health"?t.prompt_health(city,plantName):t.prompt_both(city,plantName);
   const analyze=async()=>{
     if(!b64) return;
     if(remaining<=0){onLimit();return;}
@@ -467,6 +544,12 @@ function AnalysisTab({t,city,setCity,used,setUsed,onLimit}){
         :(<div style={{textAlign:"center",padding:24,opacity:.5}}><div style={{fontSize:34,marginBottom:8}}>🪴</div><div style={{fontSize:14,fontFamily:"'DM Sans',sans-serif"}}>{t.upload_hint}</div><div style={{fontSize:11,marginTop:3,color:"#8a7f72",fontFamily:"'DM Sans',sans-serif"}}>{t.upload_sub}</div></div>)}
       </div>
       <input ref={ref} type="file" accept="image/*" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
+      {/* Plant name field */}
+      <div style={{marginBottom:16}}>
+        <Label>{t.plant_name_label}</Label>
+        <input type="text" value={plantName} onChange={e=>setPlantName(e.target.value)} placeholder={t.plant_name_ph}
+          style={{width:"100%",background:"#faf8f4",border:"1.5px solid #ede8e0",borderRadius:10,padding:"11px 13px",color:"#1a1a18",fontSize:14,fontFamily:"'DM Sans',sans-serif"}}/>
+      </div>
       <Label>{t.mode_label}</Label>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
         {t.modes.map(m=>(
