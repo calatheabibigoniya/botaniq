@@ -209,7 +209,7 @@ For each: name (common+Latin), why it fits, care difficulty 1-5, top tip.`,
   },
 };
 
-const FREE_LIMIT = 5;
+const FREE_LIMIT = 50;
 const PLANTS_KEY  = "botaniq_plants_v1";
 const CITY_KEY    = "botaniq_city_v1";
 const USED_KEY    = "botaniq_used_v1";
