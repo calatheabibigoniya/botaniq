@@ -8,7 +8,7 @@ const LS = {
 const T = {
   ru: {
     by: "by Calathea Bibigoniya",
-    nav: { diary:"Растения", plan:"План", finder:"Подбор", analysis:"Фото" },
+    nav: { diary:"Растения", plan:"План", finder:"Подбор", heal:"Лечение" },
     diary_title: "Мои растения",
     diary_empty: "Пока нет растений. Добавьте первое!",
     diary_add: "Добавить",
@@ -58,10 +58,25 @@ const T = {
     finder_btn: "Подобрать растения",
     finder_loading: "Подбираю…",
     finder_result: "Рекомендации",
-    analysis_title: "Анализ по фото",
-    analysis_warning: "Определение приблизительное — для точной идентификации обратитесь к специалисту",
-    plant_name_label: "Название растения (если знаете)",
-    plant_name_ph: "Например: Антуриум Варока, Монстера Делициоза…",
+    heal_title: "Лечение растения",
+    heal_sub: "Опишите проблему — поставим диагноз и дадим рекомендации",
+    heal_name_label: "Название растения",
+    heal_name_ph: "Например: Антуриум Варока, Монстера Делициоза…",
+    heal_name_required: "Пожалуйста, укажите название растения",
+    heal_problem_label: "Опишите проблему",
+    heal_problem_ph: "Например: желтеют и опадают листья, появились коричневые пятна по краям, вялые стебли несмотря на полив…",
+    heal_problem_required: "Пожалуйста, опишите проблему",
+    heal_photo_label: "Фото растения (необязательно, но помогает)",
+    heal_photo_hint: "Нажмите или перетащите фото",
+    heal_change_photo: "изменить фото",
+    heal_city_label: "Ваш город (для рекомендаций по свету)",
+    heal_city_ph: "Москва, Казань, Новосибирск…",
+    heal_btn: "Поставить диагноз",
+    heal_loading: "Анализирую…",
+    heal_result: "Диагноз и рекомендации",
+    heal_disclaimer: "Это рекомендации ИИ, а не профессиональная консультация. Если не уверены — обратитесь к специалисту:",
+    heal_specialist: "@calathea_bibigoniya",
+    heal_analyses_left: "консультаций осталось",
     upload_hint: "Нажмите или перетащите фото растения",
     upload_sub: "JPG, PNG или WEBP",
     change_photo: "изменить фото",
@@ -116,10 +131,25 @@ ${plants.map(p=>`- ${p.name}${p.location?` (${p.location})`:""}`).join("\n")}
 💊 ВОССТАНОВЛЕНИЕ: конкретные шаги
 🪴 УХОД: грунт с пропорциями, полив, влажность
 💡 ОСВЕЩЕНИЕ (город: ${c||"Россия"}): лучшее место, досветка`,
+    prompt_heal: (name,problem,city)=>`Ты эксперт по комнатным растениям. Пользователь обращается за помощью.
+
+Растение: ${name}
+Проблема: ${problem}
+Город: ${city||"Россия, центр"}
+Месяц: ${new Date().toLocaleString("ru",{month:"long"})}
+
+Дай развёрнутый анализ:
+🩺 ДИАГНОЗ: наиболее вероятная причина проблемы (1-2 главные версии)
+💊 ЛЕЧЕНИЕ: конкретные шаги что делать прямо сейчас
+🪴 УХОД: что изменить в уходе чтобы не повторилось (полив, грунт, влажность)
+💡 ОСВЕЩЕНИЕ: подходит ли текущее место для этого растения в ${city||"данном регионе"}
+⚠️ КОГДА СРОЧНО: признаки при которых нужна немедленная пересадка или изоляция от других растений
+
+Будь конкретным. Опирайся в первую очередь на название растения и описание проблемы.`,
   },
   en: {
     by: "by Calathea Bibigoniya",
-    nav: { diary:"Plants", plan:"Plan", finder:"Finder", analysis:"Photo" },
+    nav: { diary:"Plants", plan:"Plan", finder:"Finder", heal:"Heal" },
     diary_title: "My Plants",
     diary_empty: "No plants yet. Add your first one!",
     diary_add: "Add plant",
@@ -169,10 +199,25 @@ ${plants.map(p=>`- ${p.name}${p.location?` (${p.location})`:""}`).join("\n")}
     finder_btn: "Find plants",
     finder_loading: "Finding…",
     finder_result: "Recommendations",
-    analysis_title: "Photo Analysis",
-    analysis_warning: "Approximate identification — consult a specialist for certainty",
-    plant_name_label: "Plant name (if you know it)",
-    plant_name_ph: "E.g. Anthurium Warocqueanum, Monstera Deliciosa…",
+    heal_title: "Plant Treatment",
+    heal_sub: "Describe the problem — we'll diagnose it and give recommendations",
+    heal_name_label: "Plant name",
+    heal_name_ph: "E.g. Anthurium Warocqueanum, Monstera Deliciosa…",
+    heal_name_required: "Please enter the plant name",
+    heal_problem_label: "Describe the problem",
+    heal_problem_ph: "E.g. yellowing and dropping leaves, brown spots on edges, wilting despite watering…",
+    heal_problem_required: "Please describe the problem",
+    heal_photo_label: "Photo of the plant (optional but helpful)",
+    heal_photo_hint: "Click or drag a photo here",
+    heal_change_photo: "change photo",
+    heal_city_label: "Your city (for lighting tips)",
+    heal_city_ph: "London, Auckland, Berlin…",
+    heal_btn: "Diagnose",
+    heal_loading: "Analysing…",
+    heal_result: "Diagnosis & recommendations",
+    heal_disclaimer: "These are AI recommendations, not professional advice. If unsure — consult a specialist:",
+    heal_specialist: "@calathea_bibigoniya",
+    heal_analyses_left: "consultations left",
     upload_hint: "Click or drag a plant photo here",
     upload_sub: "JPG, PNG or WEBP",
     change_photo: "change photo",
@@ -218,6 +263,21 @@ For each: name (common+Latin), why it fits, care difficulty 1-5, top tip.`,
 💊 RECOVERY: steps if needed
 🪴 CARE: soil proportions, watering, humidity
 💡 LIGHTING (city: ${c||"temperate"}): best spot, grow lights?`,
+    prompt_heal: (name,problem,city)=>`You are a houseplant expert. A user needs help.
+
+Plant: ${name}
+Problem: ${problem}
+City: ${city||"temperate climate"}
+Month: ${new Date().toLocaleString("en",{month:"long"})}
+
+Provide a detailed analysis:
+🩺 DIAGNOSIS: most likely cause (1-2 main versions)
+💊 TREATMENT: specific steps to take right now
+🪴 CARE: what to change to prevent recurrence (watering, soil, humidity)
+💡 LIGHTING: is the current spot suitable for this plant in ${city||"this climate"}
+⚠️ URGENT: signs that require immediate repotting or isolation
+
+Be specific. Focus primarily on the plant name and problem description.`,
   },
 };
 
@@ -506,64 +566,93 @@ function FinderTab({t}){
 }
 
 // ── ANALYSIS ─────────────────────────────────────────────────────────────────
-function AnalysisTab({t,city,setCity,used,setUsed,onLimit}){
+function HealTab({t,city,setCity,used,setUsed,onLimit}){
   const [image,setImage]=useState(null);
   const [b64,setB64]=useState(null);
   const [mime,setMime]=useState("image/jpeg");
-  const [mode,setMode]=useState("both");
   const [plantName,setPlantName]=useState("");
+  const [problem,setProblem]=useState("");
   const [result,setResult]=useState(null);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState(null);
   const [drag,setDrag]=useState(false);
+  const [nameErr,setNameErr]=useState(false);
+  const [probErr,setProbErr]=useState(false);
   const ref=useRef();
   const remaining=Math.max(0,FREE_LIMIT-used);
+
   const handleFile=useCallback(f=>{
     if(!f||!f.type.startsWith("image/")) return;
-    setImage(URL.createObjectURL(f)); setMime(f.type||"image/jpeg"); setResult(null); setError(null);
+    setImage(URL.createObjectURL(f)); setMime(f.type||"image/jpeg");
     const r=new FileReader(); r.onload=e=>setB64(e.target.result.split(",")[1]); r.readAsDataURL(f);
   },[]);
   const onDrop=useCallback(e=>{e.preventDefault();setDrag(false);handleFile(e.dataTransfer.files[0]);},[handleFile]);
-  const buildPrompt=()=>mode==="identify"?t.prompt_identify(plantName):mode==="health"?t.prompt_health(city,plantName):t.prompt_both(city,plantName);
-  const analyze=async()=>{
-    if(!b64) return;
+
+  const diagnose=async()=>{
+    const ne=!plantName.trim(), pe=!problem.trim();
+    setNameErr(ne); setProbErr(pe);
+    if(ne||pe) return;
     if(remaining<=0){onLimit();return;}
     setLoading(true); setError(null); setResult(null);
     try{
-      const text=await askClaude(buildPrompt(),b64,mime); setResult(text);
+      const text=await askClaude(t.prompt_heal(plantName,problem,city),b64||null,mime);
+      setResult(text);
       LS.set(USED_KEY,used+1); setUsed(used+1);
     }catch(e){setError(t.err+e.message);}finally{setLoading(false);}
   };
+
+  const inp={width:"100%",background:"#faf8f4",border:"1.5px solid #ede8e0",borderRadius:10,padding:"11px 13px",color:"#1a1a18",fontSize:14,fontFamily:"'DM Sans',sans-serif"};
+
   return(
     <div>
-      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:700,marginBottom:8}}>{t.analysis_title}</h2>
-      <div style={{fontSize:12,color:"#b59a4a",fontFamily:"'DM Sans',sans-serif",marginBottom:16,background:"#fefce8",padding:"8px 12px",borderRadius:8,border:"1px solid #fde68a",lineHeight:1.5}}>⚠️ {t.analysis_warning}</div>
-      <div onDrop={onDrop} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onClick={()=>ref.current.click()}
-        style={{border:`1.5px dashed ${drag?"#2d5a27":image?"#c5d9c2":"#d8d2c8"}`,borderRadius:14,minHeight:image?0:148,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",transition:"all .2s",background:drag?"#f2f6f1":"#faf8f4",overflow:"hidden",position:"relative",marginBottom:16}}>
-        {image?(<><img src={image} alt="" style={{width:"100%",maxHeight:260,objectFit:"cover",display:"block"}}/><div style={{position:"absolute",bottom:10,right:10,background:"rgba(255,255,255,0.93)",border:"1px solid #ede8e0",borderRadius:8,padding:"4px 12px",fontSize:11,color:"#6b6358",fontFamily:"'DM Sans',sans-serif"}}>{t.change_photo}</div></>)
-        :(<div style={{textAlign:"center",padding:24,opacity:.5}}><div style={{fontSize:34,marginBottom:8}}>🪴</div><div style={{fontSize:14,fontFamily:"'DM Sans',sans-serif"}}>{t.upload_hint}</div><div style={{fontSize:11,marginTop:3,color:"#8a7f72",fontFamily:"'DM Sans',sans-serif"}}>{t.upload_sub}</div></div>)}
-      </div>
-      <input ref={ref} type="file" accept="image/*" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
-      {/* Plant name field */}
+      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:24,fontWeight:700,marginBottom:4}}>{t.heal_title}</h2>
+      <p style={{fontSize:13,color:"#9a8f82",fontFamily:"'DM Sans',sans-serif",marginBottom:20,lineHeight:1.5}}>{t.heal_sub}</p>
+
+      {/* Plant name — required */}
       <div style={{marginBottom:16}}>
-        <Label>{t.plant_name_label}</Label>
-        <input type="text" value={plantName} onChange={e=>setPlantName(e.target.value)} placeholder={t.plant_name_ph}
-          style={{width:"100%",background:"#faf8f4",border:"1.5px solid #ede8e0",borderRadius:10,padding:"11px 13px",color:"#1a1a18",fontSize:14,fontFamily:"'DM Sans',sans-serif"}}/>
+        <Label>{t.heal_name_label} <span style={{color:"#b91c1c"}}>*</span></Label>
+        <input type="text" value={plantName} onChange={e=>{setPlantName(e.target.value);setNameErr(false);}} placeholder={t.heal_name_ph}
+          style={{...inp,borderColor:nameErr?"#fca5a5":"#ede8e0"}}/>
+        {nameErr&&<div style={{fontSize:11,color:"#b91c1c",fontFamily:"'DM Sans',sans-serif",marginTop:4}}>{t.heal_name_required}</div>}
       </div>
-      <Label>{t.mode_label}</Label>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:16}}>
-        {t.modes.map(m=>(
-          <button key={m.v} onClick={()=>setMode(m.v)} style={{background:mode===m.v?"#f0f4ef":"#faf8f4",border:`1.5px solid ${mode===m.v?"#2d5a27":"#ede8e0"}`,borderRadius:12,padding:"12px 8px",cursor:"pointer",textAlign:"center",transition:"all .15s"}}>
-            <span style={{fontSize:15,marginBottom:4,display:"block"}}>{m.icon}</span>
-            <div style={{fontSize:11,color:mode===m.v?"#2d5a27":"#1a1a18",fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{m.label}</div>
-            <div style={{fontSize:10,color:"#9a8f82",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>{m.desc}</div>
-          </button>
-        ))}
+
+      {/* Problem — required */}
+      <div style={{marginBottom:16}}>
+        <Label>{t.heal_problem_label} <span style={{color:"#b91c1c"}}>*</span></Label>
+        <textarea value={problem} onChange={e=>{setProblem(e.target.value);setProbErr(false);}} placeholder={t.heal_problem_ph}
+          style={{...inp,borderColor:probErr?"#fca5a5":"#ede8e0",minHeight:90,resize:"vertical"}}/>
+        {probErr&&<div style={{fontSize:11,color:"#b91c1c",fontFamily:"'DM Sans',sans-serif",marginTop:4}}>{t.heal_problem_required}</div>}
       </div>
-      {(mode==="health"||mode==="both")&&<CityInput value={city} onChange={v=>{setCity(v);LS.set(CITY_KEY,v);}} label={t.city_label} ph={t.city_ph}/>}
-      <Btn onClick={analyze} disabled={!b64} loading={loading} loadingText={t.analysis_loading}>{t.analysis_btn} · {remaining} {t.analyses_left}</Btn>
+
+      {/* Photo — optional */}
+      <div style={{marginBottom:16}}>
+        <Label>{t.heal_photo_label}</Label>
+        <div onDrop={onDrop} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onClick={()=>ref.current.click()}
+          style={{border:`1.5px dashed ${drag?"#2d5a27":image?"#c5d9c2":"#d8d2c8"}`,borderRadius:12,minHeight:image?0:100,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",transition:"all .2s",background:drag?"#f2f6f1":"#faf8f4",overflow:"hidden",position:"relative"}}>
+          {image?(<><img src={image} alt="" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}}/><div style={{position:"absolute",bottom:8,right:8,background:"rgba(255,255,255,0.93)",border:"1px solid #ede8e0",borderRadius:8,padding:"3px 10px",fontSize:11,color:"#6b6358",fontFamily:"'DM Sans',sans-serif"}}>{t.heal_change_photo}</div></>)
+          :(<div style={{textAlign:"center",padding:20,opacity:.5}}><div style={{fontSize:28,marginBottom:6}}>📷</div><div style={{fontSize:13,fontFamily:"'DM Sans',sans-serif"}}>{t.heal_photo_hint}</div></div>)}
+        </div>
+        <input ref={ref} type="file" accept="image/*" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
+      </div>
+
+      {/* City */}
+      <CityInput value={city} onChange={v=>{setCity(v);LS.set(CITY_KEY,v);}} label={t.heal_city_label} ph={t.heal_city_ph}/>
+
+      <Btn onClick={diagnose} loading={loading} loadingText={t.heal_loading}>{t.heal_btn} · {remaining} {t.heal_analyses_left}</Btn>
+
       {error&&<div style={{marginTop:12,background:"#fef2f2",border:"1px solid #fecaca",borderRadius:10,padding:"12px",color:"#b91c1c",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>{error}</div>}
-      {result&&<ResultBox title={t.result_label} text={result}/>}
+
+      {result&&(
+        <div style={{marginTop:20}}>
+          <ResultBox title={t.heal_result} text={result}/>
+          {/* Disclaimer with Instagram link */}
+          <div style={{marginTop:12,padding:"12px 14px",background:"#f0f4ef",border:"1px solid #c5d9c2",borderRadius:10,fontSize:12,fontFamily:"'DM Sans',sans-serif",color:"#4a6741",lineHeight:1.6}}>
+            🌿 {t.heal_disclaimer}{" "}
+            <a href={`https://instagram.com/${t.heal_specialist.replace("@","")}`} target="_blank" rel="noopener noreferrer"
+              style={{color:"#2d5a27",fontWeight:600,textDecoration:"none"}}>{t.heal_specialist}</a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -611,7 +700,7 @@ export default function Botaniq(){
     {key:"diary", icon:"🌿", label:t.nav.diary},
     {key:"plan",  icon:"📋", label:t.nav.plan},
     {key:"finder",icon:"🔍", label:t.nav.finder},
-    {key:"analysis",icon:"📷",label:t.nav.analysis},
+    {key:"heal",icon:"💊",label:t.nav.heal},
   ];
 
   return(
@@ -647,7 +736,7 @@ export default function Botaniq(){
         {tab==="diary"    &&<DiaryTab    t={t} plants={plants} setPlants={setPlants}/>}
         {tab==="plan"     &&<PlanTab     t={t} plants={plants} city={city} setCity={setCity}/>}
         {tab==="finder"   &&<FinderTab   t={t}/>}
-        {tab==="analysis" &&<AnalysisTab t={t} city={city} setCity={setCity} used={used} setUsed={setUsed} onLimit={()=>setPaywall(true)}/>}
+        {tab==="heal"     &&<HealTab     t={t} city={city} setCity={setCity} used={used} setUsed={setUsed} onLimit={()=>setPaywall(true)}/>}
       </div>
 
       <div style={{maxWidth:600,margin:"28px auto 0",padding:"0 16px",textAlign:"center",color:"#c0b8ae",fontSize:10,fontFamily:"'DM Sans',sans-serif",lineHeight:1.8}}>{t.footer}</div>
