@@ -1,9 +1,19 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const LS = {
   get: (k, def) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } },
   set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
+
+
+// ── ПРОМОКОДЫ — добавляй/удаляй строчки здесь ────────────────────────────────
+// Формат: "КОД": количество_запросов
+const PROMO_CODES = {
+  "BOTANIQ50":  50,
+  "SUPPORT50":  50,
+  "VIP100":    100,
+};
+const USED_PROMOS_KEY = "botaniq_used_promos";
 
 const T = {
   ru: {
@@ -102,6 +112,12 @@ const T = {
     payment_note: "Оплата будет доступна при запуске. Пока — тестируйте бесплатно!",
     close: "Закрыть",
     footer: "Анализ выполняется с помощью ИИ · Данные хранятся на вашем устройстве · © 2025 Botaniq",
+    promo_label: "Есть промокод?",
+    promo_ph: "Введите код",
+    promo_apply: "Применить",
+    promo_success: (n) => `✓ Промокод применён! +${n} консультаций`,
+    promo_already: "Этот промокод уже использован",
+    promo_invalid: "Неверный промокод",
     err: "Ошибка: ",
     prompt_plan: (plants, city) => `Ты эксперт по комнатным растениям. Составь конкретный план ухода на текущую неделю.
 
@@ -243,6 +259,12 @@ ${plants.map(p=>`- ${p.name}${p.location?` (${p.location})`:""}`).join("\n")}
     payment_note: "Payments coming at launch. For now — test for free!",
     close: "Close",
     footer: "AI-powered analysis · Data stored on your device · © 2025 Botaniq",
+    promo_label: "Have a promo code?",
+    promo_ph: "Enter code",
+    promo_apply: "Apply",
+    promo_success: (n) => `✓ Promo code applied! +${n} consultations`,
+    promo_already: "This promo code has already been used",
+    promo_invalid: "Invalid promo code",
     err: "Error: ",
     prompt_plan: (plants, city) => `You are a houseplant expert. Create a specific weekly care plan.
 Plants: ${plants.map(p=>`${p.name}${p.location?` (${p.location})`:""}`).join(", ")}
@@ -281,7 +303,7 @@ Be specific. Focus primarily on the plant name and problem description.`,
   },
 };
 
-const FREE_LIMIT = 50;
+const FREE_LIMIT = 10;
 const PLANTS_KEY  = "botaniq_plants_v1";
 const CITY_KEY    = "botaniq_city_v1";
 const USED_KEY    = "botaniq_used_v1";
@@ -658,14 +680,34 @@ function HealTab({t,city,setCity,used,setUsed,onLimit}){
 }
 
 // ── PAYWALL ──────────────────────────────────────────────────────────────────
-function Paywall({t,onClose}){
+function Paywall({t,onClose,onPromoApplied}){
   const [note,setNote]=useState(false);
+  const [promoCode,setPromoCode]=useState("");
+  const [promoMsg,setPromoMsg]=useState(null);
+  const [promoOk,setPromoOk]=useState(false);
+
+  const applyPromo=()=>{
+    const code=promoCode.trim().toUpperCase();
+    if(!code) return;
+    const usedPromos=LS.get(USED_PROMOS_KEY,[]);
+    if(usedPromos.includes(code)){ setPromoMsg({ok:false,text:t.promo_already}); return; }
+    const bonus=PROMO_CODES[code];
+    if(!bonus){ setPromoMsg({ok:false,text:t.promo_invalid}); return; }
+    LS.set(USED_PROMOS_KEY,[...usedPromos,code]);
+    setPromoMsg({ok:true,text:t.promo_success(bonus)});
+    setPromoOk(true);
+    onPromoApplied(bonus);
+    setTimeout(onClose,2000);
+  };
+
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(26,26,24,0.5)",backdropFilter:"blur(8px)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={onClose}>
       <div style={{background:"#fff",border:"1px solid #ede8e0",borderRadius:24,padding:"30px 22px",maxWidth:500,width:"100%",boxShadow:"0 24px 80px rgba(0,0,0,0.14)"}} onClick={e=>e.stopPropagation()}>
         <div style={{textAlign:"center",fontSize:26,marginBottom:8}}>🌿</div>
         <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:21,fontWeight:700,textAlign:"center",marginBottom:6}}>{t.paywall_title}</h2>
         <p style={{fontSize:13,color:"#6b6358",textAlign:"center",fontFamily:"'DM Sans',sans-serif",marginBottom:22,lineHeight:1.6}}>{t.paywall_sub}</p>
+
+        {/* Plans */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
           {t.plans.map((p,i)=>(
             <div key={i} style={{background:p.highlight?"#f0f4ef":"#faf8f4",border:`1.5px solid ${p.highlight?"#2d5a27":"#ede8e0"}`,borderRadius:14,padding:"16px 10px",textAlign:"center"}}>
@@ -679,14 +721,116 @@ function Paywall({t,onClose}){
             </div>
           ))}
         </div>
+
         {note&&<div style={{background:"#f0f4ef",border:"1px solid #c5d9c2",borderRadius:10,padding:"9px 14px",fontSize:12,color:"#2d5a27",fontFamily:"'DM Sans',sans-serif",textAlign:"center",marginBottom:10}}>{t.payment_note}</div>}
-        <button onClick={onClose} style={{width:"100%",padding:"10px",background:"none",border:"none",color:"#9a8f82",fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.close}</button>
+
+        {/* Promo code */}
+        <div style={{borderTop:"1px solid #f0ebe4",paddingTop:14,marginBottom:4}}>
+          <div style={{fontSize:11,fontFamily:"'DM Sans',sans-serif",color:"#9a8f82",marginBottom:8,letterSpacing:.5}}>{t.promo_label}</div>
+          <div style={{display:"flex",gap:8}}>
+            <input
+              type="text"
+              value={promoCode}
+              onChange={e=>{setPromoCode(e.target.value.toUpperCase());setPromoMsg(null);}}
+              onKeyDown={e=>e.key==="Enter"&&applyPromo()}
+              placeholder={t.promo_ph}
+              style={{flex:1,background:"#faf8f4",border:`1.5px solid ${promoMsg&&!promoOk?"#fca5a5":promoOk?"#c5d9c2":"#ede8e0"}`,borderRadius:10,padding:"10px 12px",color:"#1a1a18",fontSize:14,fontFamily:"'DM Sans',sans-serif",letterSpacing:1,textTransform:"uppercase"}}
+            />
+            <button onClick={applyPromo} style={{padding:"10px 16px",borderRadius:10,border:"none",background:"#2d5a27",color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",whiteSpace:"nowrap"}}>
+              {t.promo_apply}
+            </button>
+          </div>
+          {promoMsg&&(
+            <div style={{marginTop:8,fontSize:12,fontFamily:"'DM Sans',sans-serif",color:promoMsg.ok?"#2d5a27":"#b91c1c",background:promoMsg.ok?"#f0f4ef":"#fef2f2",padding:"8px 12px",borderRadius:8,border:`1px solid ${promoMsg.ok?"#c5d9c2":"#fecaca"}`}}>
+              {promoMsg.text}
+            </div>
+          )}
+        </div>
+
+        <button onClick={onClose} style={{width:"100%",padding:"10px",background:"none",border:"none",color:"#9a8f82",fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginTop:8}}>{t.close}</button>
       </div>
     </div>
   );
 }
 
 // ── ROOT ─────────────────────────────────────────────────────────────────────
+
+// ── SVG TAB ICONS ─────────────────────────────────────────────────────────────
+function IconDiary({active}){
+  const c=active?"#2d5a27":"#9a8f82";
+  return(<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <rect x="3" y="2" width="13" height="18" rx="2" stroke={c} strokeWidth="1.5" fill="none"/>
+    <path d="M16 5h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2" stroke={c} strokeWidth="1.5"/>
+    <path d="M7 7h6M7 11h6M7 15h4" stroke={c} strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>);
+}
+function IconPlan({active}){
+  const c=active?"#2d5a27":"#9a8f82";
+  return(<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <rect x="3" y="3" width="16" height="16" rx="2" stroke={c} strokeWidth="1.5" fill="none"/>
+    <path d="M7 3v3M15 3v3M3 9h16" stroke={c} strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M7 13h2M7 16h2M13 13h2M13 16h2" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>
+  </svg>);
+}
+function IconFinder({active}){
+  const c=active?"#2d5a27":"#9a8f82";
+  return(<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <circle cx="10" cy="10" r="6.5" stroke={c} strokeWidth="1.5" fill="none"/>
+    <path d="M15 15l4 4" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>
+    <path d="M8 10a2 2 0 0 1 2-2" stroke={c} strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>);
+}
+function IconHeal({active}){
+  const c=active?"#2d5a27":"#9a8f82";
+  return(<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <path d="M11 3C7 3 4 6 4 9c0 4 4 7 7 10 3-3 7-6 7-10 0-3-3-6-7-6z" stroke={c} strokeWidth="1.5" fill={active?"rgba(45,90,39,0.1)":"none"}/>
+    <path d="M9 10h4M11 8v4" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>
+  </svg>);
+}
+
+// ── SPLASH SCREEN ─────────────────────────────────────────────────────────────
+function SplashScreen({onDone}){
+  useEffect(()=>{ const id=setTimeout(onDone,2200); return()=>clearTimeout(id); },[onDone]);
+  return(
+    <div style={{position:"fixed",inset:0,background:"#f5f0e8",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"splashOut 0.4s ease 1.8s both"}}>
+      <style>{`
+        @keyframes splashOut{to{opacity:0;pointer-events:none}}
+        @keyframes leafIn{from{opacity:0;transform:scale(0.7) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+        @keyframes textIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+        @keyframes dotPulse{0%,100%{opacity:.3}50%{opacity:1}}
+      `}</style>
+      <div style={{animation:"leafIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both"}}><Logo size={72}/></div>
+      <div style={{fontFamily:"'Cormorant Garamond',Georgia,serif",fontSize:36,fontWeight:700,color:"#1a1a18",marginTop:16,animation:"textIn 0.5s ease 0.4s both"}}>Botaniq</div>
+      <div style={{fontSize:11,color:"#9a8f82",fontFamily:"'DM Sans',sans-serif",letterSpacing:2,textTransform:"uppercase",marginTop:6,animation:"textIn 0.5s ease 0.6s both"}}>by Calathea Bibigoniya</div>
+      <div style={{display:"flex",gap:6,marginTop:32,animation:"textIn 0.5s ease 0.9s both"}}>
+        {[0,1,2].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",background:"#2d5a27",animation:`dotPulse 1s ease ${i*0.2}s infinite`}}/>)}
+      </div>
+    </div>
+  );
+}
+
+// ── INSTALL PROMPT ────────────────────────────────────────────────────────────
+function InstallPrompt({lang,onClose}){
+  const isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid=/android/i.test(navigator.userAgent);
+  if(!isIos&&!isAndroid) return null;
+  const ru=lang==="ru";
+  return(
+    <div style={{position:"fixed",bottom:90,left:16,right:16,background:"#fff",border:"1px solid #c5d9c2",borderRadius:16,padding:"14px 16px",zIndex:99,boxShadow:"0 4px 24px rgba(0,0,0,0.1)",display:"flex",alignItems:"flex-start",gap:12}}>
+      <div style={{fontSize:24,flexShrink:0}}>📱</div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:13,fontWeight:600,color:"#1a1a18",fontFamily:"'DM Sans',sans-serif",marginBottom:4}}>
+          {ru?"Добавьте на рабочий стол":"Add to Home Screen"}
+        </div>
+        <div style={{fontSize:11,color:"#6b6358",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}>
+          {isIos?(ru?"Нажмите кнопку «Поделиться» и выберите «На экран Домой»":"Tap the Share button then select 'Add to Home Screen'"):(ru?"Нажмите ⋮ в браузере и выберите «Добавить на главный экран»":"Tap ⋮ in the browser and select 'Add to Home screen'")}
+        </div>
+      </div>
+      <button onClick={onClose} style={{background:"none",border:"none",fontSize:18,color:"#9a8f82",cursor:"pointer",padding:0,flexShrink:0}}>✕</button>
+    </div>
+  );
+}
+
 export default function Botaniq(){
   const [lang,setLang]=useState(()=>navigator.language?.startsWith("ru")?"ru":"en");
   const t=T[lang];
@@ -695,12 +839,17 @@ export default function Botaniq(){
   const [city,setCity]=useState(()=>LS.get(CITY_KEY,""));
   const [used,setUsed]=useState(()=>LS.get(USED_KEY,0));
   const [paywall,setPaywall]=useState(false);
+  const [splash,setSplash]=useState(()=>!LS.get("botaniq_launched",false));
+  const [showInstall,setShowInstall]=useState(()=>!LS.get("botaniq_install_dismissed",false));
+  const hideSplash=()=>{ setSplash(false); LS.set("botaniq_launched",true); };
+  const hideInstall=()=>{ setShowInstall(false); LS.set("botaniq_install_dismissed",true); };
+  const ru=lang==="ru";
 
   const tabs=[
-    {key:"diary", icon:"🌿", label:t.nav.diary},
-    {key:"plan",  icon:"📋", label:t.nav.plan},
-    {key:"finder",icon:"🔍", label:t.nav.finder},
-    {key:"heal",icon:"💊",label:t.nav.heal},
+    {key:"diary",  icon:<IconDiary  active={tab==="diary"}/>,  label:t.nav.diary},
+    {key:"plan",   icon:<IconPlan   active={tab==="plan"}/>,   label:t.nav.plan},
+    {key:"finder", icon:<IconFinder active={tab==="finder"}/>, label:t.nav.finder},
+    {key:"heal",   icon:<IconHeal   active={tab==="heal"}/>,   label:t.nav.heal},
   ];
 
   return(
@@ -708,12 +857,14 @@ export default function Botaniq(){
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        body{background:#faf8f4;}
+        body{background:#f5f0e8;}
         input:focus,textarea:focus{border-color:#2d5a27!important;box-shadow:0 0 0 3px rgba(45,90,39,0.1);}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
         .fade-up{animation:fadeUp .35s ease both;}
       `}</style>
+
+      {splash&&<SplashScreen onDone={hideSplash}/>}
 
       {/* NAV */}
       <nav style={{background:"#fff",borderBottom:"1px solid #ede8e0",padding:"13px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100,boxShadow:"0 1px 6px rgba(0,0,0,0.04)"}}>
@@ -724,35 +875,43 @@ export default function Botaniq(){
             <div style={{fontSize:9,color:"#9a8f82",fontFamily:"'DM Sans',sans-serif",letterSpacing:1.6,textTransform:"uppercase",marginTop:1}}>{t.by}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:2}}>
-          {["ru","en"].map(l=>(
-            <button key={l} onClick={()=>setLang(l)} style={{background:"none",border:"none",cursor:"pointer",padding:"3px 8px",fontFamily:"'DM Sans',sans-serif",fontSize:11,letterSpacing:1.2,textTransform:"uppercase",color:lang===l?"#1a1a18":"#b0a898",borderBottom:lang===l?"1.5px solid #2d5a27":"1.5px solid transparent",transition:"all .15s"}}>{l}</button>
-          ))}
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <a href="https://boosty.to/calathea_bibigoniya" target="_blank" rel="noopener noreferrer"
+            style={{display:"flex",alignItems:"center",gap:4,padding:"5px 10px",borderRadius:8,background:"#f0f4ef",border:"1px solid #c5d9c2",textDecoration:"none",fontSize:11,color:"#2d5a27",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>
+            🌿 {ru?"Поддержать":"Support"}
+          </a>
+          <div style={{display:"flex",gap:2}}>
+            {["ru","en"].map(l=>(
+              <button key={l} onClick={()=>setLang(l)} style={{background:"none",border:"none",cursor:"pointer",padding:"3px 8px",fontFamily:"'DM Sans',sans-serif",fontSize:11,letterSpacing:1.2,textTransform:"uppercase",color:lang===l?"#1a1a18":"#b0a898",borderBottom:lang===l?"1.5px solid #2d5a27":"1.5px solid transparent",transition:"all .15s"}}>{l}</button>
+            ))}
+          </div>
         </div>
       </nav>
 
       {/* CONTENT */}
       <div style={{maxWidth:600,margin:"0 auto",padding:"22px 16px 0"}} className="fade-up">
-        {tab==="diary"    &&<DiaryTab    t={t} plants={plants} setPlants={setPlants}/>}
-        {tab==="plan"     &&<PlanTab     t={t} plants={plants} city={city} setCity={setCity}/>}
-        {tab==="finder"   &&<FinderTab   t={t}/>}
-        {tab==="heal"     &&<HealTab     t={t} city={city} setCity={setCity} used={used} setUsed={setUsed} onLimit={()=>setPaywall(true)}/>}
+        {tab==="diary"  &&<DiaryTab  t={t} plants={plants} setPlants={setPlants}/>}
+        {tab==="plan"   &&<PlanTab   t={t} plants={plants} city={city} setCity={setCity}/>}
+        {tab==="finder" &&<FinderTab t={t}/>}
+        {tab==="heal"   &&<HealTab   t={t} city={city} setCity={setCity} used={used} setUsed={setUsed} onLimit={()=>setPaywall(true)}/>}
       </div>
 
       <div style={{maxWidth:600,margin:"28px auto 0",padding:"0 16px",textAlign:"center",color:"#c0b8ae",fontSize:10,fontFamily:"'DM Sans',sans-serif",lineHeight:1.8}}>{t.footer}</div>
+
+      {showInstall&&<InstallPrompt lang={lang} onClose={hideInstall}/>}
 
       {/* BOTTOM NAV */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#fff",borderTop:"1px solid #ede8e0",display:"flex",zIndex:100,boxShadow:"0 -2px 10px rgba(0,0,0,0.05)"}}>
         {tabs.map(tb=>(
           <button key={tb.key} onClick={()=>setTab(tb.key)} style={{flex:1,padding:"10px 4px 12px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-            <span style={{fontSize:18}}>{tb.icon}</span>
+            {tb.icon}
             <span style={{fontSize:9,fontFamily:"'DM Sans',sans-serif",letterSpacing:.4,color:tab===tb.key?"#2d5a27":"#9a8f82",fontWeight:tab===tb.key?600:400,textTransform:"uppercase"}}>{tb.label}</span>
             {tab===tb.key&&<div style={{width:18,height:2,borderRadius:1,background:"#2d5a27"}}/>}
           </button>
         ))}
       </div>
 
-      {paywall&&<Paywall t={t} onClose={()=>setPaywall(false)}/>}
+      {paywall&&<Paywall t={t} onClose={()=>setPaywall(false)} onPromoApplied={(bonus)=>{ const newUsed=Math.max(0,used-bonus); LS.set(USED_KEY,newUsed); setUsed(newUsed); setPaywall(false); }}/>}
     </div>
   );
 }
